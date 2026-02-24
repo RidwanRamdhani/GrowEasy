@@ -5,18 +5,18 @@ import (
 	"net/http"
 
 	"GrowEasy/config"
+	"GrowEasy/handler"
+	"GrowEasy/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// Connect to database
 	if err := config.ConnectDatabase(); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer config.CloseDatabase()
 
-	// Auto migrate models
 	if err := config.AutoMigrate(); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -28,6 +28,26 @@ func main() {
 			"message": "Hello, Gin!",
 		})
 	})
+
+	authHandler := handler.NewAuthHandler()
+
+	auth := r.Group("/api/auth")
+	{
+		auth.POST("/register", authHandler.Register)
+		auth.POST("/login", authHandler.Login)
+	}
+
+	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware())
+	{
+		api.GET("/profile", func(c *gin.Context) {
+			userID, _ := c.Get("user_id")
+			c.JSON(http.StatusOK, gin.H{
+				"message": "Authorized",
+				"user_id": userID,
+			})
+		})
+	}
 
 	r.Run(":8080")
 }
