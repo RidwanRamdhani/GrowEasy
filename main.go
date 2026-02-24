@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"GrowEasy/config"
-	"GrowEasy/handler"
+	handler "GrowEasy/handlers"
 	"GrowEasy/middleware"
 
 	"github.com/gin-gonic/gin"
