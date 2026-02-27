@@ -21,7 +21,7 @@ func NewAnalysisHandler() *AnalysisHandler {
 
 func (h *AnalysisHandler) Create(c *gin.Context) {
 
-	var req dto.CreateAnalysisRequest
+	var req dto.AnalysisResponse
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

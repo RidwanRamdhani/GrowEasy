@@ -1,6 +1,6 @@
 package dto
 
-type CreateAnalysisRequest struct {
+type AnalysisResponse struct {
 	Latitude     float64                `json:"latitude" binding:"required"`
 	Longitude    float64                `json:"longitude" binding:"required"`
 	LocationName string                 `json:"location_name"`
@@ -8,4 +8,16 @@ type CreateAnalysisRequest struct {
 	WeatherData  map[string]interface{} `json:"weather_data"`
 	Predictions  map[string]interface{} `json:"predictions"`
 	AiResponse   string                 `json:"ai_response"`
+}
+
+type AnalysisRequest struct {
+	Latitude  float64 `json:"latitude" binding:"required"`
+	Longitude float64 `json:"longitude" binding:"required"`
+}
+
+type MLServiceRequest struct {
+	Latitude   float64     `json:"latitude"`
+	Longitude  float64     `json:"longitude"`
+	RawSoil    interface{} `json:"raw_soil"`
+	RawWeather interface{} `json:"raw_weather"`
 }

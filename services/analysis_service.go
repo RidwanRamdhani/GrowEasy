@@ -16,7 +16,7 @@ func NewAnalysisService() *AnalysisService {
 	return &AnalysisService{}
 }
 
-func (s *AnalysisService) Create(userID string, req dto.CreateAnalysisRequest) error {
+func (s *AnalysisService) Create(userID string, req dto.AnalysisResponse) error {
 
 	soilJSON, _ := json.Marshal(req.SoilData)
 	weatherJSON, _ := json.Marshal(req.WeatherData)
