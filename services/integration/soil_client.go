@@ -35,11 +35,11 @@ func (c *SoilClient) GetSoilData(lat, lng float64) (map[string]interface{}, erro
 	params := url.Values{}
 	params.Set("lon", fmt.Sprintf("%f", lng))
 	params.Set("lat", fmt.Sprintf("%f", lat))
-	params.Set("property", "nitrogen")
-	params.Set("property", "phh2o")
-	params.Set("depth", "0-5cm")
-	params.Set("depth", "5-15cm")
-	params.Set("depth", "15-30cm")
+	params.Add("property", "nitrogen")
+	params.Add("property", "phh2o")
+	params.Add("depth", "0-5cm")
+	params.Add("depth", "5-15cm")
+	params.Add("depth", "15-30cm")
 	params.Set("value", "mean")
 
 	baseURL.RawQuery = params.Encode()

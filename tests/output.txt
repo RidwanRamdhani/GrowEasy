@@ -107,7 +107,7 @@
     "time": "iso8601"
   },
   "elevation": 12,
-  "generationtime_ms": 0.6135702133178711,
+  "generationtime_ms": 2.4683475494384766,
   "hourly": {
     "relative_humidity_2m": [
       94,
@@ -843,17 +843,17 @@
       83,
       78,
       82,
-      80,
-      78,
-      75,
-      73,
       76,
-      78,
-      78,
-      73,
+      76,
       75,
+      75,
+      75,
+      79,
       78,
-      79
+      75,
+      71,
+      73,
+      75
     ],
     "time": [
       "2026-01-28T00:00",
@@ -1627,6 +1627,72 @@
       {
         "depths": [
           {
+            "label": "0-5cm",
+            "range": {
+              "bottom_depth": 5,
+              "top_depth": 0,
+              "unit_depth": "cm"
+            },
+            "values": {
+              "mean": null
+            }
+          },
+          {
+            "label": "5-15cm",
+            "range": {
+              "bottom_depth": 15,
+              "top_depth": 5,
+              "unit_depth": "cm"
+            },
+            "values": {
+              "mean": null
+            }
+          },
+          {
+            "label": "15-30cm",
+            "range": {
+              "bottom_depth": 30,
+              "top_depth": 15,
+              "unit_depth": "cm"
+            },
+            "values": {
+              "mean": null
+            }
+          }
+        ],
+        "name": "nitrogen",
+        "unit_measure": {
+          "d_factor": 100,
+          "mapped_units": "cg/kg",
+          "target_units": "g/kg",
+          "uncertainty_unit": ""
+        }
+      },
+      {
+        "depths": [
+          {
+            "label": "0-5cm",
+            "range": {
+              "bottom_depth": 5,
+              "top_depth": 0,
+              "unit_depth": "cm"
+            },
+            "values": {
+              "mean": null
+            }
+          },
+          {
+            "label": "5-15cm",
+            "range": {
+              "bottom_depth": 15,
+              "top_depth": 5,
+              "unit_depth": "cm"
+            },
+            "values": {
+              "mean": null
+            }
+          },
+          {
             "label": "15-30cm",
             "range": {
               "bottom_depth": 30,
@@ -1648,7 +1714,7 @@
       }
     ]
   },
-  "query_time_s": 0.062340497970581055,
+  "query_time_s": 2.194484233856201,
   "type": "Feature"
 }
 
