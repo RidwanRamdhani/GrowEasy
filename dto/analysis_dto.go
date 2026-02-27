@@ -16,8 +16,6 @@ type AnalysisRequest struct {
 }
 
 type MLServiceRequest struct {
-	Latitude   float64     `json:"latitude"`
-	Longitude  float64     `json:"longitude"`
 	RawSoil    interface{} `json:"raw_soil"`
 	RawWeather interface{} `json:"raw_weather"`
 }
