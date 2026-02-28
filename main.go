@@ -30,6 +30,7 @@ func main() {
 	})
 
 	authHandler := handler.NewAuthHandler()
+	analysisHandler := handler.NewAnalysisHandler()
 
 	auth := r.Group("/api/auth")
 	{
@@ -47,6 +48,15 @@ func main() {
 				"user_id": userID,
 			})
 		})
+
+		// Weather data endpoint
+		api.POST("/weather", analysisHandler.GetWeather)
+
+		// Soil data endpoint
+		api.POST("/soil", analysisHandler.GetSoil)
+
+		// Unified analysis: weather + soil + ML prediction
+		api.POST("/predict", analysisHandler.GetPredict)
 	}
 
 	r.Run(":8080")

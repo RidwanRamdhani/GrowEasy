@@ -19,3 +19,11 @@ type MLServiceRequest struct {
 	Weather interface{} `json:"weather"`
 	Soil    interface{} `json:"soil"`
 }
+
+type Top3Prediction map[string]float64
+
+type MLServiceResponse struct {
+	PredictionClass string         `json:"prediction_class"`
+	Probability     float64        `json:"probability"`
+	Top3            Top3Prediction `json:"top3"`
+}
