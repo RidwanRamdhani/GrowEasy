@@ -16,6 +16,6 @@ type AnalysisRequest struct {
 }
 
 type MLServiceRequest struct {
-	RawSoil    interface{} `json:"raw_soil"`
-	RawWeather interface{} `json:"raw_weather"`
+	Weather interface{} `json:"weather"`
+	Soil    interface{} `json:"soil"`
 }
