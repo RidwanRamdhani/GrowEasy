@@ -55,7 +55,7 @@ func main() {
 		// Soil data endpoint
 		api.POST("/soil", analysisHandler.GetSoil)
 
-		// Unified analysis: weather + soil + ML prediction
+		// Unified analysis: weather + soil + ML prediction + Gemini Summary
 		api.POST("/predict", analysisHandler.GetPredict)
 	}
 
