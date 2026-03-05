@@ -1,4 +1,4 @@
-package service
+package services
 
 import (
 	"encoding/json"
@@ -138,4 +138,20 @@ func (s *AnalysisService) GenerateSummary(
 		return "", fmt.Errorf("Gemini client is not initialized")
 	}
 	return s.geminiClient.GenerateSummary(predictionClass, probability, top3, soilData, weatherData)
+}
+
+// GetAnalysisHistory returns all analyses for a given user, newest first
+func (s *AnalysisService) GetAnalysisHistory(userID string) ([]models.Analysis, error) {
+	var analyses []models.Analysis
+
+	result := config.DB.
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Find(&analyses)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to fetch analysis history: %w", result.Error)
+	}
+
+	return analyses, nil
 }

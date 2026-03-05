@@ -38,6 +38,145 @@ func NewGeminiClient() (*GeminiClient, error) {
 	}, nil
 }
 
+// aggregateWeatherData computes summary stats from raw weather API response to avoid sending large raw arrays to Gemini.
+func aggregateWeatherData(weatherData map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{}
+
+	daily, ok := weatherData["daily"].(map[string]interface{})
+	if !ok {
+		return weatherData
+	}
+
+	// Average temperature
+	if temps, ok := daily["temperature_2m_mean"].([]interface{}); ok && len(temps) > 0 {
+		sum := 0.0
+		min := 1000.0
+		max := -1000.0
+		for _, v := range temps {
+			if t, ok := v.(float64); ok {
+				sum += t
+				if t < min {
+					min = t
+				}
+				if t > max {
+					max = t
+				}
+			}
+		}
+		avg := sum / float64(len(temps))
+		result["avg_temperature_c"] = fmt.Sprintf("%.1f", avg)
+		result["min_temperature_c"] = fmt.Sprintf("%.1f", min)
+		result["max_temperature_c"] = fmt.Sprintf("%.1f", max)
+	}
+
+	// Total & average daily precipitation
+	if precips, ok := daily["precipitation_sum"].([]interface{}); ok && len(precips) > 0 {
+		total := 0.0
+		rainyDays := 0
+		for _, v := range precips {
+			if p, ok := v.(float64); ok {
+				total += p
+				if p > 1.0 {
+					rainyDays++
+				}
+			}
+		}
+		result["total_precipitation_mm"] = fmt.Sprintf("%.1f", total)
+		result["avg_daily_precipitation_mm"] = fmt.Sprintf("%.1f", total/float64(len(precips)))
+		result["rainy_days_last_30d"] = rainyDays
+	}
+
+	// Average humidity from hourly data
+	if hourly, ok := weatherData["hourly"].(map[string]interface{}); ok {
+		if humidities, ok := hourly["relative_humidity_2m"].([]interface{}); ok && len(humidities) > 0 {
+			sum := 0.0
+			count := 0
+			for _, v := range humidities {
+				if h, ok := v.(float64); ok {
+					sum += h
+					count++
+				}
+			}
+			if count > 0 {
+				result["avg_humidity_pct"] = fmt.Sprintf("%.1f", sum/float64(count))
+			}
+		}
+	}
+
+	if tz, ok := weatherData["timezone"].(string); ok {
+		result["timezone"] = tz
+	}
+
+	return result
+}
+
+// aggregateSoilData extracts and normalizes soil layer values,
+func aggregateSoilData(soilData map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{}
+
+	properties, ok := soilData["properties"].(map[string]interface{})
+	if !ok {
+		return map[string]interface{}{"note": "no soil data available"}
+	}
+
+	layers, ok := properties["layers"].([]interface{})
+	if !ok {
+		return map[string]interface{}{"note": "no soil layers available"}
+	}
+
+	for _, l := range layers {
+		layer, ok := l.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		name, _ := layer["name"].(string)
+		unitMeasure, _ := layer["unit_measure"].(map[string]interface{})
+		targetUnit, _ := unitMeasure["target_units"].(string)
+		dFactor := 1.0
+		if df, ok := unitMeasure["d_factor"].(float64); ok && df != 0 {
+			dFactor = df
+		}
+
+		depths, ok := layer["depths"].([]interface{})
+		if !ok {
+			continue
+		}
+
+		layerValues := map[string]interface{}{}
+		hasData := false
+
+		for _, d := range depths {
+			depth, ok := d.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			label, _ := depth["label"].(string)
+			values, _ := depth["values"].(map[string]interface{})
+			mean := values["mean"]
+
+			if mean == nil {
+				layerValues[label] = "no data"
+				continue
+			}
+
+			hasData = true
+			if meanVal, ok := mean.(float64); ok {
+				layerValues[label] = fmt.Sprintf("%.2f %s", meanVal/dFactor, targetUnit)
+			}
+		}
+
+		if !hasData {
+			result[name] = fmt.Sprintf("no data available (unit: %s)", targetUnit)
+		} else {
+			result[name] = layerValues
+		}
+	}
+
+	return result
+}
+
 // GenerateSummary creates a summary from ML prediction results using Gemini API
 func (c *GeminiClient) GenerateSummary(
 	predictionClass string,
@@ -46,32 +185,59 @@ func (c *GeminiClient) GenerateSummary(
 	soilData map[string]interface{},
 	weatherData map[string]interface{},
 ) (string, error) {
+	weather := aggregateWeatherData(weatherData)
+	soil := aggregateSoilData(soilData)
 
-	prompt := fmt.Sprintf(`Based on the following ML prediction results, provide a brief summary and agricultural recommendations with only these data:
+	// Format top3 as readable percentages
+	top3Formatted := ""
+	for crop, prob := range top3 {
+		top3Formatted += fmt.Sprintf("\n   - %s: %.1f%%", crop, prob*100)
+	}
 
-PREDICTION RESULTS:
-- Main Crop: %s
-- Confidence: %.2f%%
-- Top 3 Predictions: %v
+	// Format soil as readable summary
+	soilSummary := ""
+	for k, v := range soil {
+		soilSummary += fmt.Sprintf("\n   - %s: %v", k, v)
+	}
 
-SOIL CONDITIONS: %v
+	prompt := fmt.Sprintf(`You are an expert agronomist assistant. Based on the ML crop prediction and field conditions below, write a practical farming advisory for the farmer.
 
-WEATHER CONDITIONS: %v
+## ML PREDICTION
+- Recommended Crop: %s (confidence: %.1f%%)
+- Other Candidates:%s
 
-Please provide:
-1. Brief analysis of the prediction
-2. Agricultural recommendations
-3. Risk assessment (if any)
+## WEATHER CONDITIONS (last 30 days)
+- Avg Temperature: %s°C (min %s°C / max %s°C)
+- Total Rainfall: %s mm over 30 days (%s mm/day avg, %v rainy days)
+- Avg Humidity: %s%%
 
-Response in English, max 200 words.`,
+## SOIL CONDITIONS%s
+
+---
+
+Write a farming advisory in English (200–250 words) covering ONLY these three sections:
+
+**1. Fertilizer & Nutrient Recommendations**
+Based on the soil nutrient profile above (nitrogen, pH), recommend appropriate fertilizer type, dosage guidance, and application timing. Give confident, direct recommendations — do NOT mention missing data, unavailable readings, or suggest the farmer conduct soil tests. Just provide the best general recommendation for the predicted crop and climate.
+
+**2. Weather Risk Assessment**
+Identify specific risks based on the 30-day weather data (e.g. waterlogging risk from high rainfall, heat stress, disease pressure from high humidity). Be specific with thresholds where relevant.
+
+**3. Optimal Planting Schedule**
+Suggest the best time window to plant %s given current conditions, including any preparation steps before planting. If conditions are not yet ideal, state what the farmer should wait for.
+
+Keep the tone practical and direct — this is for a farmer in the field, not an academic.`,
 		predictionClass,
 		probability*100,
-		top3,
-		soilData,
-		weatherData,
+		top3Formatted,
+		weather["avg_temperature_c"], weather["min_temperature_c"], weather["max_temperature_c"],
+		weather["total_precipitation_mm"], weather["avg_daily_precipitation_mm"], weather["rainy_days_last_30d"],
+		weather["avg_humidity_pct"],
+		soilSummary,
+		predictionClass,
 	)
 
-	temp := float32(0.7)
+	temp := float32(0.5)
 	result, err := c.Client.Models.GenerateContent(
 		context.Background(),
 		c.Model,
