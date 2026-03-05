@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"net/http"
@@ -74,3 +74,20 @@ func (h *AnalysisHandler) GetPredict(c *gin.Context) {
 
 	c.JSON(http.StatusOK, analysis)
 }
+
+// GetHistory fetches all analysis history for the authenticated user
+func (h *AnalysisHandler) GetHistory(c *gin.Context) {
+	userID := c.MustGet("user_id").(string)
+
+	history, err := h.service.GetAnalysisHistory(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":  history,
+		"count": len(history),
+	})
+}
+

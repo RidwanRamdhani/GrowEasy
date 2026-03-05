@@ -57,6 +57,9 @@ func main() {
 
 		// Unified analysis: weather + soil + ML prediction + Gemini Summary
 		api.POST("/predict", analysisHandler.GetPredict)
+
+		// Fetch all analysis history for authenticated user
+		api.GET("/history", analysisHandler.GetHistory)
 	}
 
 	r.Run(":8080")
