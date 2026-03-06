@@ -4,13 +4,16 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 
 	"google.golang.org/genai"
 )
 
 type GeminiClient struct {
-	Client *genai.Client
-	Model  string
+	Client   *genai.Client
+	Model    string
+	sessions map[string][]string // History per user
+	mu       sync.RWMutex
 }
 
 func NewGeminiClient() (*GeminiClient, error) {
@@ -33,8 +36,9 @@ func NewGeminiClient() (*GeminiClient, error) {
 	}
 
 	return &GeminiClient{
-		Client: client,
-		Model:  model,
+		Client:   client,
+		Model:    model,
+		sessions: make(map[string][]string),
 	}, nil
 }
 
@@ -262,4 +266,66 @@ Keep the tone practical and direct — this is for a farmer in the field, not an
 	summary := candidate.Content.Parts[0].Text
 
 	return summary, nil
+}
+
+// ChatWithSession handles chat with in-memory history per user
+func (c *GeminiClient) ChatWithSession(userID, analysisContext, message string) (string, error) {
+	c.mu.Lock()
+	history, exists := c.sessions[userID]
+	if !exists {
+		// Initialize with system prompt
+		systemPrompt := fmt.Sprintf(`You are an expert agronomist assistant. Use the following latest analysis context to inform your responses:
+
+%s
+
+Engage in a conversational manner with the farmer. Answer questions based on this context and general farming knowledge. Keep responses concise and brief`, analysisContext)
+		history = []string{systemPrompt}
+		c.sessions[userID] = history
+	}
+	c.mu.Unlock()
+
+	// Add user message to history
+	c.mu.Lock()
+	c.sessions[userID] = append(c.sessions[userID], "User: "+message)
+	history = c.sessions[userID]
+	c.mu.Unlock()
+
+	// Build full prompt
+	fullPrompt := ""
+	for _, h := range history {
+		fullPrompt += h + "\n"
+	}
+
+	temp := float32(0.)
+	result, err := c.Client.Models.GenerateContent(
+		context.Background(),
+		c.Model,
+		genai.Text(fullPrompt),
+		&genai.GenerateContentConfig{
+			Temperature: &temp,
+		},
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate chat response: %w", err)
+	}
+
+	if len(result.Candidates) == 0 || result.Candidates[0].Content == nil || len(result.Candidates[0].Content.Parts) == 0 {
+		return "", fmt.Errorf("no response from Gemini")
+	}
+
+	response := result.Candidates[0].Content.Parts[0].Text
+
+	// Add AI response to history
+	c.mu.Lock()
+	c.sessions[userID] = append(c.sessions[userID], "AI: "+response)
+	c.mu.Unlock()
+
+	return response, nil
+}
+
+// ClearSession clears the session for a user
+func (c *GeminiClient) ClearSession(userID string) {
+	c.mu.Lock()
+	delete(c.sessions, userID)
+	c.mu.Unlock()
 }

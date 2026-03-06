@@ -81,6 +81,7 @@ func AutoMigrate() error {
 	err := DB.AutoMigrate(
 		&models.User{},
 		&models.Analysis{},
+		&models.ChatMessage{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to auto migrate: %w", err)

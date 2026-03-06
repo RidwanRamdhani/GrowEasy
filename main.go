@@ -31,6 +31,7 @@ func main() {
 
 	authHandler := handler.NewAuthHandler()
 	analysisHandler := handler.NewAnalysisHandler()
+	chatHandler := handler.NewChatHandler()
 
 	auth := r.Group("/api/auth")
 	{
@@ -60,6 +61,15 @@ func main() {
 
 		// Fetch all analysis history for authenticated user
 		api.GET("/history", analysisHandler.GetHistory)
+
+		// Chat with Gemini using latest analysis context
+		api.POST("/chat", chatHandler.Chat)
+
+		// Get chat history
+		api.GET("/chat/history", chatHandler.GetHistory)
+
+		// Reset chat session
+		api.POST("/chat/reset", chatHandler.Reset)
 	}
 
 	r.Run(":8080")

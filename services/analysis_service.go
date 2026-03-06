@@ -111,6 +111,11 @@ func (s *AnalysisService) GetPredict(userID string, lat, lon float64) (*models.A
 		return nil, fmt.Errorf("failed to save analysis: %w", err)
 	}
 
+	// Clear chat session to use new context
+	if s.geminiClient != nil {
+		s.geminiClient.ClearSession(userID)
+	}
+
 	// Load the user
 	user := &models.User{}
 	if err := config.DB.First(user, "id = ?", *analysis.UserID).Error; err != nil {
@@ -138,6 +143,19 @@ func (s *AnalysisService) GenerateSummary(
 		return "", fmt.Errorf("Gemini client is not initialized")
 	}
 	return s.geminiClient.GenerateSummary(predictionClass, probability, top3, soilData, weatherData)
+}
+
+// GetLatestAnalysis returns the most recent analysis for a given user
+func (s *AnalysisService) GetLatestAnalysis(userID string) (*models.Analysis, error) {
+	var analysis models.Analysis
+	result := config.DB.
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		First(&analysis)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to fetch latest analysis: %w", result.Error)
+	}
+	return &analysis, nil
 }
 
 // GetAnalysisHistory returns all analyses for a given user, newest first
