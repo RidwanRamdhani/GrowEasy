@@ -42,17 +42,37 @@ func (h *ChatHandler) Chat(c *gin.Context) {
 // GetHistory retrieves and returns the user's chat message history
 func (h *ChatHandler) GetHistory(c *gin.Context) {
 	userID := c.MustGet("user_id").(string)
+	all := c.Query("all") == "true"
 
-	history, err := h.service.GetChatHistory(userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	if all {
+		history, err := h.service.GetAllChatHistory(userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Count total messages across all sessions
+		totalCount := 0
+		for _, msgs := range history {
+			totalCount += len(msgs)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data":  history,
+			"count": totalCount,
+		})
+	} else {
+		history, err := h.service.GetChatHistory(userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data":  history,
+			"count": len(history),
+		})
 	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"data":  history,
-		"count": len(history),
-	})
 }
 
 // Reset clears the user's chat session to refresh context
