@@ -96,7 +96,7 @@ All endpoints below require the `Authorization` header: `Bearer <token>`
 | `POST` | `/api/predict` | **Core Feature:** Run full analysis (Weather + Soil + ML + AI Summary) |
 | `GET` | `/api/history` | Get user's past analysis history |
 | `POST` | `/api/chat` | Chat with AI about the latest analysis |
-| `GET` | `/api/chat/history` | Get chat session history |
+| `GET` | `/api/chat/history` | Get current chat session history (add `?all=true` for all sessions grouped by session) |
 | `POST` | `/api/chat/reset` | Reset the current chat session context |
 
 ## Project Structure
