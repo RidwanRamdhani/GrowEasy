@@ -5,6 +5,9 @@ import (
 	"GrowEasy/models"
 	"GrowEasy/services/integration"
 	"fmt"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type ChatService struct {
@@ -20,21 +23,51 @@ func NewChatService() *ChatService {
 	}
 }
 
+// GetOrCreateSessionID gets the current session ID for a user, creating one if none exists
+func (s *ChatService) GetOrCreateSessionID(userID string) (string, error) {
+	var latestMessage models.ChatMessage
+	result := config.DB.Where("user_id = ?", userID).Order("created_at DESC").First(&latestMessage)
+	if result.Error != nil && result.Error != gorm.ErrRecordNotFound {
+		return "", result.Error
+	}
+	if result.RowsAffected > 0 && latestMessage.SessionID != "" {
+		return latestMessage.SessionID, nil
+	}
+	// No messages or empty session_id, create new session
+	return s.CreateNewSession(userID)
+}
+
+// CreateNewSession creates a new session ID for a user
+func (s *ChatService) CreateNewSession(userID string) (string, error) {
+	sessionID := uuid.New().String()
+	return sessionID, nil
+}
+
 // SaveMessage saves a chat message to DB
 func (s *ChatService) SaveMessage(userID string, message string, isUser bool) error {
+	sessionID, err := s.GetOrCreateSessionID(userID)
+	if err != nil {
+		return err
+	}
 	chatMsg := models.ChatMessage{
-		UserID:  &userID,
-		Message: message,
-		IsUser:  isUser,
+		UserID:    &userID,
+		SessionID: sessionID,
+		Message:   message,
+		IsUser:    isUser,
 	}
 	return config.DB.Create(&chatMsg).Error
 }
 
-// GetChatHistory retrieves chat history for a user
+// GetChatHistory retrieves chat history for the current session of a user
 func (s *ChatService) GetChatHistory(userID string) ([]models.ChatMessage, error) {
+	sessionID, err := s.GetOrCreateSessionID(userID)
+	if err != nil {
+		return nil, err
+	}
 	var messages []models.ChatMessage
 	result := config.DB.
-		Where("user_id = ?", userID).
+		Preload("User").
+		Where("user_id = ? AND session_id = ?", userID, sessionID).
 		Order("created_at ASC"). // Display Oldest to Newest
 		Find(&messages)
 	if result.Error != nil {
@@ -43,10 +76,12 @@ func (s *ChatService) GetChatHistory(userID string) ([]models.ChatMessage, error
 	return messages, nil
 }
 
-// ResetSession clears the chat session for a user
+// ResetSession clears the chat session for a user and starts a new one
 func (s *ChatService) ResetSession(userID string) error {
 	s.geminiClient.ClearSession(userID)
-	return nil
+
+	_, err := s.CreateNewSession(userID)
+	return err
 }
 
 // Chat handles user message with context from latest analysis using Gemini session
