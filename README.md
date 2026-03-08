@@ -82,7 +82,6 @@ Before running the application, ensure you have the following installed:
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/` | Health check / Welcome message |
 | `POST` | `/api/auth/register` | Register a new user |
 | `POST` | `/api/auth/login` | Login and receive JWT token |
 
