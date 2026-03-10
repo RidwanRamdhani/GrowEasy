@@ -49,7 +49,7 @@ func (c *SoilClient) GetSoilData(lat, lng float64) (map[string]interface{}, erro
 		// Check if it's a timeout error
 		if urlErr, ok := err.(*url.Error); ok && urlErr.Timeout() {
 			// Fallback to mock data on timeout
-			return c.getMockSoilData(), nil
+			return c.getMockSoilData(lat, lng), nil
 		}
 		return nil, fmt.Errorf("failed to fetch soil data: %w", err)
 	}
@@ -57,7 +57,7 @@ func (c *SoilClient) GetSoilData(lat, lng float64) (map[string]interface{}, erro
 
 	if resp.StatusCode == http.StatusServiceUnavailable {
 		// Fallback to mock data when API is unavailable
-		return c.getMockSoilData(), nil
+		return c.getMockSoilData(lat, lng), nil
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -74,10 +74,10 @@ func (c *SoilClient) GetSoilData(lat, lng float64) (map[string]interface{}, erro
 }
 
 // getMockSoilData returns mock soil data when API is unavailable
-func (c *SoilClient) getMockSoilData() map[string]interface{} {
+func (c *SoilClient) getMockSoilData(lat, lng float64) map[string]interface{} {
 	return map[string]interface{}{
 		"geometry": map[string]interface{}{
-			"coordinates": []interface{}{106.8456, -6.2088},
+			"coordinates": []interface{}{lng, lat},
 			"type":        "Point",
 		},
 		"properties": map[string]interface{}{
