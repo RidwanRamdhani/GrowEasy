@@ -58,6 +58,8 @@ Before running the application, ensure you have the following installed:
 
     # Google Gemini API Key
     GEMINI_API_KEY=your_gemini_api_key
+    GIN_MODE=release
+    GEMINI_MODEL=gemini-3.1-flash-lite-preview (you can change it to Pro model if you have the Pro API key)
     ```
 
 ## Running the Application
