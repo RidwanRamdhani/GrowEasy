@@ -70,6 +70,7 @@ func (c *SoilClient) GetSoilData(lat, lng float64) (map[string]interface{}, erro
 		return nil, fmt.Errorf("failed to decode soil response: %w", err)
 	}
 
+	// use mockup data for demo purposes
 	return c.getMockSoilData(lat, lng), nil
 }
 
