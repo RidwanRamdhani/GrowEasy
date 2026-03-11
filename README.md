@@ -18,7 +18,7 @@ GrowEasy is an intelligent agricultural assistant backend designed to empower fa
 *   **Framework:** [Gin Web Framework](https://github.com/gin-gonic/gin)
 *   **Database:** PostgreSQL (using [GORM](https://gorm.io/))
 *   **AI Integration:** [Google Gemini API](https://ai.google.dev/)
-*   **ML Integration: ** Custom ML Service (Prediction) https://github.com/Rayya12/Hackathon-AI
+*   **ML Integration:** Custom ML Service (Prediction) https://github.com/Rayya12/Hackathon-AI
 *   **Authentication:** JWT (JSON Web Tokens)
 *   **External APIs:**
     *   Open-Meteo (Weather)
