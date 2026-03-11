@@ -70,7 +70,7 @@ func (c *SoilClient) GetSoilData(lat, lng float64) (map[string]interface{}, erro
 		return nil, fmt.Errorf("failed to decode soil response: %w", err)
 	}
 
-	return result, nil
+	return c.getMockSoilData(lat, lng), nil
 }
 
 // getMockSoilData returns mock soil data when API is unavailable
@@ -99,7 +99,7 @@ func (c *SoilClient) getMockSoilData(lat, lng float64) map[string]interface{} {
 								"unit_depth":   "cm",
 							},
 							"values": map[string]interface{}{
-								"mean": 1.5,
+								"mean": 15,
 							},
 						},
 						map[string]interface{}{
@@ -110,7 +110,7 @@ func (c *SoilClient) getMockSoilData(lat, lng float64) map[string]interface{} {
 								"unit_depth":   "cm",
 							},
 							"values": map[string]interface{}{
-								"mean": 1.3,
+								"mean": 13,
 							},
 						},
 						map[string]interface{}{
@@ -121,7 +121,7 @@ func (c *SoilClient) getMockSoilData(lat, lng float64) map[string]interface{} {
 								"unit_depth":   "cm",
 							},
 							"values": map[string]interface{}{
-								"mean": 1.2,
+								"mean": 12,
 							},
 						},
 					},
@@ -143,7 +143,7 @@ func (c *SoilClient) getMockSoilData(lat, lng float64) map[string]interface{} {
 								"unit_depth":   "cm",
 							},
 							"values": map[string]interface{}{
-								"mean": 6.5,
+								"mean": 65,
 							},
 						},
 						map[string]interface{}{
@@ -154,7 +154,7 @@ func (c *SoilClient) getMockSoilData(lat, lng float64) map[string]interface{} {
 								"unit_depth":   "cm",
 							},
 							"values": map[string]interface{}{
-								"mean": 6.8,
+								"mean": 68,
 							},
 						},
 						map[string]interface{}{
@@ -165,7 +165,7 @@ func (c *SoilClient) getMockSoilData(lat, lng float64) map[string]interface{} {
 								"unit_depth":   "cm",
 							},
 							"values": map[string]interface{}{
-								"mean": 7.0,
+								"mean": 70,
 							},
 						},
 					},
