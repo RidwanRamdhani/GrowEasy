@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"GrowEasy/config"
@@ -23,6 +24,11 @@ func main() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
+	ginMode := os.Getenv("GIN_MODE")
+	if ginMode == "" {
+		ginMode = "debug"
+	}
+    gin.SetMode(ginMode)
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
