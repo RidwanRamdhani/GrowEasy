@@ -24,6 +24,11 @@ GrowEasy is an intelligent agricultural assistant backend designed to empower fa
     *   Open-Meteo (Weather)
     *   SoilGrids (Soil Data)
 
+## Related Projects
+
+*   **Frontend UI:** GrowEasy-UI (https://github.com/RidwanRamdhani/GrowEasy-UI) 
+*   **ML Service:** Custom ML Service (Prediction) https://github.com/Rayya12/Hackathon-AI
+
 ## Prerequisites
 
 Before running the application, ensure you have the following installed:
