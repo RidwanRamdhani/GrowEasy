@@ -70,19 +70,21 @@ Before running the application, ensure you have the following installed:
 
 ## Running the Application
 
-1.  **Install Dependencies:**
-    ```bash
-    go mod download
-    ```
+  1.  **Install Dependencies:**
+     ```bash
+     go mod download
+     ```
 
-2.  **Run the Server:**
-    ```bash
-    go run main.go
-    ```
-    The server will start on port `8080`
+  2.  **Database Setup:**
+     Before running the application, create the PostgreSQL database specified in your .env file (default: `groweasy_db`).
+     The application automatically handles database migrations using GORM on startup. Ensure your PostgreSQL database is running and accessible.
 
-3.  **Database Migration:**
-    The application automatically handles database migrations using GORM on startup. Ensure your PostgreSQL database is running and accessible.
+  3.  **Run the Server:**
+     ```bash
+     go run main.go
+     ```
+     The server will start on port `8080`
+  
 
 ## API Documentation
 
